@@ -14,14 +14,14 @@ teste-1.gif21
 8. Salvar e listar execuções no banco de dados e reexecutar, baixar ou excluir testes anteriores
 
 🔧 Tecnologias Utilizadas:
-
+```
 Node.js + Express
 Prisma ORM
 PostgreSQL (via Docker)
 OpenAI API (GPT-4)
 Jest para execução dos testes
 HTML + CSS + Bootstrap Icons para a interface
-
+```
 Jest é um framework de testes para aplicações JavaScript e TypeScript, criado pelo Facebook.
 
 Ele é usado para:
@@ -35,7 +35,7 @@ Ele é usado para:
 ---
 
 📁 Estrutura do Projeto
-
+```
 api-tester-ia/
 ├── Dockerfile
 ├── docker-compose.yml
@@ -53,18 +53,19 @@ api-tester-ia/
 │   └── migrations/
 ├── public/
 │   └── index.html
-
+```
 ---
 
 ⚙️ Configuração Inicial
 
 1. Variáveis de Ambiente (.env)
-
+```
 OPENAI_API_KEY=your_openai_key
 DATABASE_URL=postgres://postgres:postgres@db-alt:5432/testdb
-
+```
 2. Docker Compose (docker-compose.yml)
 
+```
 services:
   api-tester-ia:
     build: .
@@ -85,9 +86,9 @@ services:
       POSTGRES_DB: testdb
       POSTGRES_USER: user
       POSTGRES_PASSWORD: password
-
+```
 3. Prisma (schema.prisma)
-
+```
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
@@ -106,7 +107,7 @@ model TestExecution {
   reportFile  String
   createdAt   DateTime @default(now())
 }
-
+```
 
 ---
 
@@ -150,13 +151,13 @@ Executa os testes usando Jest e salva o relatório JSON em reports/test-report.j
 ✅ Como Executar
 
 1. Rode o banco de dados com Docker Compose:
-
+```
 docker-compose up -d
-
+```
 1. Rode as migrações Prisma:
-
+```
 npx prisma migrate dev --name init
-
+```
 
 1. Acesse: http://localhost:3000
 2. Digite a instrução, clique em Executar Teste, e veja o resultado ao vivo.
@@ -166,49 +167,49 @@ npx prisma migrate dev --name init
 🧪 Vamos testar
 
 🔹 1. Consulta simples — API de Países
-
+```
 "Crie um teste para fazer uma requisição GET para https://restcountries.com/v3.1/name/brazil e verificar se retorna status 200."
-
+```
 📌 API: https://restcountries.com/v3.1/name/brazil
 🧪 Ideal para mostrar retorno rápido e dados bem estruturados.
 
 ---
 
 🔹 2. Erro esperado — País inexistente
-
+```
 "Crie um teste para buscar um país inexistente na API https://restcountries.com/v3.1/name/zzzzz e validar que retorna 404."
-
+```
 📌 Mostra o comportamento de falha controlada — ótima para testar status.
 
 ---
 
 🔹 3. API com parâmetros — API do JSONPlaceholder
-
+```
 "Crie um teste para buscar o post com ID 1 em https://jsonplaceholder.typicode.com/posts/1 e validar se o título existe."
-
+```
 📌 API: https://jsonplaceholder.typicode.com/posts/1
 🔎 Valida response.data.title.
 
 ---
 
 🔹 4. POST de teste — JSONPlaceholder
-
+```
 "Crie um teste para enviar um POST para https://jsonplaceholder.typicode.com/posts com título e corpo e esperar status 201."
-
+```
 📝 API aceita POSTs fictícios e retorna uma resposta simulada — perfeito para demonstração.
 
 ---
 
 🔹 5. Fluxo encadeado — POST + GET
-
+```
 "Crie um teste que envia um POST para https://jsonplaceholder.typicode.com/posts e em seguida verifica se consegue buscar o mesmo post com ID 101."
-
+```
 ---
 
 🔹 5. Teste de login e de autentificação — POST + GET
-
+```
 "Faça login via POST em https://reqres.in/api/login com email e senha, capture o token do response e use para fazer um GET autenticado em https://reqres.in/api/users?page=2 com status 200 ou 201. Dados:  email":eve.holt@reqres.in password:cityslicka"
-
+```
 ---
 
 🎯  O que aprendemos neste vídeo:
