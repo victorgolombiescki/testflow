@@ -121,7 +121,7 @@ Executa os testes usando Jest e salva o relatório JSON em reports/test-report.j
 
 ---
 
-🌐 Backend Express (app.js)
+🌐 Backend Express (```app.js```)
 
 * Endpoint /generate-and-run:
   * Recebe a instrução
@@ -136,7 +136,7 @@ Executa os testes usando Jest e salva o relatório JSON em reports/test-report.j
 
 ---
 
-💻 Interface Web (public/index.html)
+💻 Interface Web (```public/index.html```)
 
 * Design moderno com Bootstrap Icons
 * Entrada para instrução do teste
