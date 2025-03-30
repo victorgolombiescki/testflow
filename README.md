@@ -1,8 +1,6 @@
 🎥 Tutorial: Apresentando o TestFlow AI - Gerador de Testes Automatizados para APIs REST
 
-teste-1.gif21
-
-🎯 O que vamos fazer neste vídeo:
+🎯 O que vamos fazer neste projeto:
 
 1. Clonar o projeto TestFlow AI
 2. Entender cada arquivo
@@ -111,13 +109,13 @@ model TestExecution {
 
 ---
 
-🧠 Geração de Testes com IA (generateTestPrompt.js)
+🧠 Geração de Testes com IA (```generateTestPrompt.js```)
 
 Gera código de teste com base na instrução do usuário utilizando OpenAI (GPT-4). Segue um prompt rígido para garantir boas práticas.
 
 ---
 
-🧪 Execução dos Testes (test-runner.js)
+🧪 Execução dos Testes (```test-runner.js```)
 
 Executa os testes usando Jest e salva o relatório JSON em reports/test-report.json.
 
