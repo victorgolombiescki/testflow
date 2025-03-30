@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TestFlow AI</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #2b6cb0;
+      --primary-dark: #2c5282;
+      --bg-light: #f7fafc;
+      --bg-dark: #ffffff;
+      --text-dark: #2d3748;
+      --text-light: #4a5568;
+      --success: #38a169;
+      --error: #e53e3e;
+      --card-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg-light);
+      color: var(--text-dark);
+      padding: 3rem;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 2rem;
+    }
+
+    textarea {
+      width: 100%;
+      height: 180px;
+      padding: 1rem;
+      font-family: monospace;
+      font-size: 1rem;
+      border: 1px solid #cbd5e0;
+      border-radius: 12px;
+      background-color: #fff;
+      box-shadow: var(--card-shadow);
+      margin-bottom: 1rem;
+    }
+
+    textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    button {
+      padding: 0.75rem 1.5rem;
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 1rem;
+      box-shadow: 0 4px 14px rgba(49, 130, 206, 0.3);
+      transition: background-color 0.2s;
+    }
+
+    button:hover {
+      background-color: var(--primary-dark);
+    }
+
+    .results, .executions {
+      margin-top: 2.5rem;
+      background-color: var(--bg-dark);
+      padding: 2rem;
+      border-radius: 16px;
+      box-shadow: var(--card-shadow);
+    }
+
+    .results h2, .executions h2 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      color: var(--text-light);
+    }
+
+    .test-item {
+      margin-bottom: 0.75rem;
+      font-weight: 500;
+    }
+
+    .passed { color: var(--success); }
+    .failed { color: var(--error); }
+
+    .loader {
+      margin-top: 2rem;
+      border: 4px solid #e2e8f0;
+      border-top: 4px solid var(--primary);
+      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      animation: spin 1s linear infinite;
+      display: none;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .execution-item {
+      padding: 1rem 0;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .execution-actions button, .execution-actions a {
+      margin-left: 0.5rem;
+      background-color: var(--text-light);
+      border: none;
+      color: #fff;
+      border-radius: 8px;
+      padding: 0.5rem 0.75rem;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background-color 0.2s;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .execution-actions button:hover, .execution-actions a:hover {
+      background-color: var(--text-dark);
+    }
+  </style>
+</head>
+
+<body>
+  <h1>TestFlow AI</h1>
+  <textarea id="instruction" placeholder="Descreva o teste que deseja gerar..."></textarea>
+  <button onclick="sendInstruction()"><i class="bi bi-play-fill"></i> Executar Teste</button>
+
+  <div class="loader" id="loader"></div>
+  <div class="results" id="results" style="display:none">
+    <h2><i class="bi bi-bar-chart-fill"></i> Resultado Atual</h2>
+    <div style="background: #f1f5f9; border-radius: 12px; padding: 1rem; margin-bottom: 1rem; box-shadow: var(--card-shadow);">
+      <pre id="summary" style="margin: 0; font-size: 0.95rem; line-height: 1.4;"></pre>
+    </div>
+    <div id="details" style="margin-bottom: 1rem;"></div>
+    <a id="downloadLink" href="#" style="display:none" download class="execution-actions">
+      <i class="bi bi-code-slash"></i> Baixar Código
+    </a>
+  </div>
+  
+
+  <div class="executions">
+    <h2>Histórico de Execuções</h2>
+    <div id="executions"></div>
+  </div>
+
+  <script>
+    async function sendInstruction() {
+      const instruction = document.getElementById('instruction').value;
+      if (!instruction.trim()) return alert('Digite uma instrução.');
+
+      const loader = document.getElementById('loader');
+      const resultsDiv = document.getElementById('results');
+      const summary = document.getElementById('summary');
+      const details = document.getElementById('details');
+      const downloadLink = document.getElementById('downloadLink');
+
+      resultsDiv.style.display = 'none';
+      summary.textContent = '';
+      details.innerHTML = '';
+      downloadLink.style.display = 'none';
+      loader.style.display = 'block';
+
+      try {
+        const response = await fetch('/generate-and-run', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ instruction })
+        });
+
+        const data = await response.json();
+        loader.style.display = 'none';
+
+        if (data.success) {
+          summary.textContent = data.report.summary;
+          details.innerHTML = data.report.details.map(item => `
+            <div class="test-item ${item.passed ? 'passed' : 'failed'}">
+              ✔️ Teste ${item.id}: ${item.title} — ${item.passed ? '✅ Passou' : '❌ Falhou'}
+            </div>
+          `).join('');
+
+          downloadLink.href = data.download;
+          downloadLink.style.display = 'inline-block';
+          resultsDiv.style.display = 'block';
+          loadExecutions();
+        } else {
+          summary.textContent = '❌ Erro ao executar os testes.';
+          resultsDiv.style.display = 'block';
+        }
+      } catch (err) {
+        loader.style.display = 'none';
+        summary.textContent = '❌ Erro na requisição.';
+        resultsDiv.style.display = 'block';
+      }
+    }
+
+    async function loadExecutions() {
+      const container = document.getElementById('executions');
+      container.innerHTML = '🔄 Carregando...';
+
+      const res = await fetch('/executions');
+      const executions = await res.json();
+
+      container.innerHTML = executions.map(exec => `
+        <div class="execution-item">
+          <div>
+            <strong>${new Date(exec.createdAt).toLocaleString()}</strong><br/>
+            ${exec.instruction.slice(0, 80)}...
+          </div>
+          <div class="execution-actions">
+            <a href="/download/${exec.testFile}" download title="Baixar Arquivo"><i class="bi bi-download"></i></a>
+            <button onclick='reexecute("${exec.instruction.replace(/"/g, '\\"')}")' title="Reexecutar"><i class="bi bi-arrow-repeat"></i></button>
+            <button onclick='deleteExecution("${exec.id}")' title="Excluir"><i class="bi bi-trash"></i></button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function reexecute(instruction) {
+      document.getElementById('instruction').value = instruction;
+      sendInstruction();
+    }
+
+    async function deleteExecution(id) {
+      if (!confirm('Tem certeza que deseja excluir essa execução?')) return;
+
+      const res = await fetch(`/executions/${id}`, { method: 'DELETE' });
+
+      if (res.ok) {
+        alert('Execução excluída com sucesso!');
+        loadExecutions();
+      } else {
+        alert('Erro ao excluir execução.');
+      }
+    }
+
+    window.onload = loadExecutions;
+  </script>
+</body>
+
+</html>

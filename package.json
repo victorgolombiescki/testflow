@@ -1,0 +1,19 @@
+{
+    "name": "api-tester-ia",
+    "main": "app.js",
+    "scripts": {
+        "start": "node app.js",
+        "test": "jest --json --outputFile=reports/test-report.json"
+    },
+    "dependencies": {
+        "@prisma/client": "^6.5.0",
+        "axios": "^1.6.0",
+        "express": "^4.18.2",
+        "openai": "^4.0.0",
+        "prisma": "^6.5.0",
+        "uuid": "^11.1.0"
+    },
+    "devDependencies": {
+        "jest": "^29.0.0"
+    }
+}

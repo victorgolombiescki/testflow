@@ -1,0 +1,18 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model TestExecution {
+  id          String   @id @default(uuid())
+  instruction String
+  code        String
+  report      Json
+  testFile    String
+  reportFile  String
+  createdAt   DateTime @default(now())
+}
