@@ -15,4 +15,5 @@ model TestExecution {
   testFile    String
   reportFile  String
   createdAt   DateTime @default(now())
+  customLogs: result.customLogs || []
 }

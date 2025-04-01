@@ -40,9 +40,15 @@
       margin-bottom: 2rem;
     }
 
+    .input-group {
+      display: flex;
+      gap: 1rem;
+      flex-direction: column;
+    }
+
     textarea {
       width: 100%;
-      height: 180px;
+      height: 140px;
       padding: 1rem;
       font-family: monospace;
       font-size: 1rem;
@@ -50,7 +56,6 @@
       border-radius: 12px;
       background-color: #fff;
       box-shadow: var(--card-shadow);
-      margin-bottom: 1rem;
     }
 
     textarea:focus {
@@ -58,21 +63,25 @@
       border-color: var(--primary);
     }
 
-    button {
-      padding: 0.75rem 1.5rem;
+    .add-scenario-btn, button {
+      padding: 0.5rem 1rem;
       background-color: var(--primary);
       color: white;
       border: none;
-      border-radius: 10px;
+      border-radius: 8px;
       cursor: pointer;
       font-weight: 600;
-      font-size: 1rem;
+      font-size: 0.95rem;
       box-shadow: 0 4px 14px rgba(49, 130, 206, 0.3);
       transition: background-color 0.2s;
     }
 
-    button:hover {
+    button:hover, .add-scenario-btn:hover {
       background-color: var(--primary-dark);
+    }
+
+    .scenario-container {
+      margin-bottom: 1rem;
     }
 
     .results, .executions {
@@ -81,13 +90,6 @@
       padding: 2rem;
       border-radius: 16px;
       box-shadow: var(--card-shadow);
-    }
-
-    .results h2, .executions h2 {
-      font-size: 1.25rem;
-      font-weight: 600;
-      margin-bottom: 1rem;
-      color: var(--text-light);
     }
 
     .test-item {
@@ -148,10 +150,18 @@
 
 <body>
   <h1>TestFlow AI</h1>
-  <textarea id="instruction" placeholder="Descreva o teste que deseja gerar..."></textarea>
+
+  <div id="scenarios" class="input-group">
+    <div class="scenario-container">
+      <textarea placeholder="Descreva o teste que deseja gerar..."></textarea>
+    </div>
+  </div>
+
+  <button class="add-scenario-btn" onclick="addScenario()">➕ Adicionar Cenário</button>
   <button onclick="sendInstruction()"><i class="bi bi-play-fill"></i> Executar Teste</button>
 
   <div class="loader" id="loader"></div>
+
   <div class="results" id="results" style="display:none">
     <h2><i class="bi bi-bar-chart-fill"></i> Resultado Atual</h2>
     <div style="background: #f1f5f9; border-radius: 12px; padding: 1rem; margin-bottom: 1rem; box-shadow: var(--card-shadow);">
@@ -162,7 +172,6 @@
       <i class="bi bi-code-slash"></i> Baixar Código
     </a>
   </div>
-  
 
   <div class="executions">
     <h2>Histórico de Execuções</h2>
@@ -170,10 +179,15 @@
   </div>
 
   <script>
-    async function sendInstruction() {
-      const instruction = document.getElementById('instruction').value;
-      if (!instruction.trim()) return alert('Digite uma instrução.');
+    function addScenario() {
+      const container = document.getElementById('scenarios');
+      const block = document.createElement('div');
+      block.classList.add('scenario-container');
+      block.innerHTML = '<textarea placeholder="Descreva outro cenário..."></textarea>';
+      container.appendChild(block);
+    }
 
+    async function sendInstruction() {
       const loader = document.getElementById('loader');
       const resultsDiv = document.getElementById('results');
       const summary = document.getElementById('summary');
@@ -185,6 +199,9 @@
       details.innerHTML = '';
       downloadLink.style.display = 'none';
       loader.style.display = 'block';
+
+      const instructions = Array.from(document.querySelectorAll('#scenarios textarea')).map(t => t.value.trim()).filter(Boolean);
+      const instruction = instructions.join('\n');
 
       try {
         const response = await fetch('/generate-and-run', {
@@ -203,6 +220,17 @@
               ✔️ Teste ${item.id}: ${item.title} — ${item.passed ? '✅ Passou' : '❌ Falhou'}
             </div>
           `).join('');
+
+          if (data.report.customLogs?.length) {
+            details.innerHTML += `<h3 style="margin-top: 1rem; font-weight: 600;">📋 Dados Capturados nos Testes</h3>`;
+            data.report.customLogs.forEach(log => {
+              details.innerHTML += `
+                <div style="background: #edf2f7; padding: 1rem; margin-top: 0.5rem; border-radius: 8px; box-shadow: var(--card-shadow);">
+                  <pre style="margin: 0; font-size: 0.9rem;">${JSON.stringify(log, null, 2)}</pre>
+                </div>
+              `;
+            });
+          }
 
           downloadLink.href = data.download;
           downloadLink.style.display = 'inline-block';
@@ -234,7 +262,9 @@
           </div>
           <div class="execution-actions">
             <a href="/download/${exec.testFile}" download title="Baixar Arquivo"><i class="bi bi-download"></i></a>
-            <button onclick='reexecute("${exec.instruction.replace(/"/g, '\\"')}")' title="Reexecutar"><i class="bi bi-arrow-repeat"></i></button>
+            <button onclick='reexecute(decodeURIComponent("${encodeURIComponent(exec.instruction)}"))' title="Reexecutar">
+              <i class="bi bi-arrow-repeat"></i>
+            </button>
             <button onclick='deleteExecution("${exec.id}")' title="Excluir"><i class="bi bi-trash"></i></button>
           </div>
         </div>
@@ -242,21 +272,19 @@
     }
 
     function reexecute(instruction) {
-      document.getElementById('instruction').value = instruction;
+      document.getElementById('scenarios').innerHTML = '';
+      const block = document.createElement('div');
+      block.classList.add('scenario-container');
+      block.innerHTML = `<textarea>${instruction}</textarea>`;
+      document.getElementById('scenarios').appendChild(block);
       sendInstruction();
     }
 
     async function deleteExecution(id) {
       if (!confirm('Tem certeza que deseja excluir essa execução?')) return;
-
       const res = await fetch(`/executions/${id}`, { method: 'DELETE' });
-
-      if (res.ok) {
-        alert('Execução excluída com sucesso!');
-        loadExecutions();
-      } else {
-        alert('Erro ao excluir execução.');
-      }
+      if (res.ok) loadExecutions();
+      else alert('Erro ao excluir execução.');
     }
 
     window.onload = loadExecutions;

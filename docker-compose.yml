@@ -10,7 +10,7 @@ services:
     depends_on:
       - db-alt
     volumes:
-      - .:/usr/src/apps
+      - .:/usr/src/app
     command: npm start
 
   db-alt:
